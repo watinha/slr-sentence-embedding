@@ -10,6 +10,7 @@ from sklearn.model_selection import GridSearchCV
 from config import get_slr_files, get_classifier
 from util.bib_loader import load
 from util.years_split import YearsSplit
+from util.text_filter import FilterComposite, StopwordsFilter, LemmatizerFilter
 
 
 if (len(sys.argv) < 2):
@@ -47,7 +48,8 @@ for train_index, test_index in kfold.split(X, y):
     classifier, classifier_params = get_classifier(classifier_name)
     selector_params = { 'selector__k': [ 25, 50, 100, 200, 'all'] }
     pipeline = GridSearchCV(Pipeline([
-        ('extractor', TfidfVectorizer(stop_words='english', ngram_range=(1,3))),
+        ('preprocessor', FilterComposite(filters=[StopwordsFilter(), LemmatizerFilter()])),
+        ('extractor', TfidfVectorizer(ngram_range=(1,3))),
         ('scaler', StandardScaler(with_mean=False)),
         ('selector', SelectKBest(chi2)),
         ('classifier', classifier)

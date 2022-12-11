@@ -9,6 +9,14 @@ RUN pip install numpy \
                 sklearn \
                 imblearn \
                 openpyxl \
-                bibtexparser
+                bibtexparser \
+                nltk \
+                np
+
+RUN python -m nltk.downloader punkt
+RUN python -m nltk.downloader stopwords
+RUN python -m nltk.downloader averaged_perceptron_tagger
+RUN python -m nltk.downloader wordnet
+RUN python -m nltk.downloader omw-1.4
 
 CMD ["ash"]
