@@ -1,4 +1,8 @@
 from sklearn import tree, svm, ensemble
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+from util.embedding_vectorizer import AverageEmbeddingVectorizer, GloveLoader, SELoader
+from util.text_filter import StopwordsFilter, LemmatizerFilter
 
 slrs_files = {
     'games': {
@@ -88,3 +92,15 @@ def get_classifier(classifier_name):
             'classifier__class_weight': ['balanced', None]
         }
     return classifier, params
+
+
+def get_extractor(extractor_name, embeddings_filename=''):
+    match extractor_name:
+        case 'tfidf':
+            return TfidfVectorizer(ngram_range=(1,3)), [StopwordsFilter(), LemmatizerFilter()]
+        case 'embeddings_glove':
+            return AverageEmbeddingVectorizer(GloveLoader(embeddings_filename)), [StopwordsFilter()]
+        case 'embeddings_se':
+            return AverageEmbeddingVectorizer(SELoader(embeddings_filename)), [StopwordsFilter()]
+
+

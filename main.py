@@ -3,14 +3,13 @@ import np, sys
 from sklearn import metrics
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.model_selection import GridSearchCV
 
-from config import get_slr_files, get_classifier
+from config import get_slr_files, get_classifier, get_extractor
 from util.bib_loader import load
 from util.years_split import YearsSplit
-from util.text_filter import FilterComposite, StopwordsFilter, LemmatizerFilter
+from util.text_filter import FilterComposite
 
 
 if (len(sys.argv) < 2):
@@ -29,8 +28,9 @@ if (len(sys.argv) < 5):
     print('fifth argument missing: extrator (tfidf,embeddings_glove,embeddings_se)')
     sys.exit(1)
 
-_, theme, classifier_name, titles, extractor = sys.argv
+_, theme, classifier_name, titles, extractor_name = sys.argv
 titles = True if titles == 'true' else False
+embedding_filename = './embeddings/glove.6B.200d.txt' if extractor_name == 'embeddings_glove' else './embeddings/SO_vectors_200.bin'
 
 slr_files = get_slr_files(theme)
 X, y, years = load(slr_files, titles_only=titles)
@@ -47,9 +47,12 @@ for train_index, test_index in kfold.split(X, y):
 
     classifier, classifier_params = get_classifier(classifier_name)
     selector_params = { 'selector__k': [ 25, 50, 100, 200, 'all'] }
+
+    extractor, filters = get_extractor(extractor_name, embeddings_filename=embedding_filename)
+
     pipeline = GridSearchCV(Pipeline([
-        ('preprocessor', FilterComposite(filters=[StopwordsFilter(), LemmatizerFilter()])),
-        ('extractor', TfidfVectorizer(ngram_range=(1,3))),
+        ('preprocessor', FilterComposite(filters=filters)),
+        ('extractor', extractor),
         ('scaler', StandardScaler(with_mean=False)),
         ('selector', SelectKBest(chi2)),
         ('classifier', classifier)
