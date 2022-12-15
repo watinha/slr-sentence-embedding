@@ -21,4 +21,4 @@ RUN python -m nltk.downloader punkt \
                               wordnet \
                               omw-1.4
 
-CMD ["ash"]
+CMD ["bash"]
