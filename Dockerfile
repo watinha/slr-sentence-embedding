@@ -1,9 +1,9 @@
-FROM python:alpine
+FROM python:3.8.16-slim-bullseye
 
-RUN apk add alpine-sdk \
-            cython \
-            openblas-dev \
-            zlib-dev
+RUN apt-get update
+RUN apt-get -y install build-essential \
+                       gfortran
+
 RUN pip install numpy \
                 pandas \
                 sklearn \
@@ -11,12 +11,14 @@ RUN pip install numpy \
                 openpyxl \
                 bibtexparser \
                 nltk \
-                np
+                np \
+                cython \
+                gensim
 
-RUN python -m nltk.downloader punkt
-RUN python -m nltk.downloader stopwords
-RUN python -m nltk.downloader averaged_perceptron_tagger
-RUN python -m nltk.downloader wordnet
-RUN python -m nltk.downloader omw-1.4
+RUN python -m nltk.downloader punkt \
+                              stopwords \
+                              averaged_perceptron_tagger \
+                              wordnet \
+                              omw-1.4
 
 CMD ["ash"]
