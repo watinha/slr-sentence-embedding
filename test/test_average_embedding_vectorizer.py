@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch, mock_open
 
-from lib.embedding_vectorizer import AverageEmbeddingVectorizer, GloveLoader
+from util.embedding_vectorizer import AverageEmbeddingVectorizer, GloveLoader
 
 class AverageEmbeddingVectorizerTest (TestCase):
 
@@ -10,12 +10,12 @@ class AverageEmbeddingVectorizerTest (TestCase):
         vectorizer = AverageEmbeddingVectorizer(
                 GloveLoader('glove.txt'))
         mock = mock_open()
-        mock.return_value.__iter__.return_value = iter([
+        mock.return_value.__iter__ = Mock(return_value = iter([
             'abobrinha 1 2 3',
             'pepino 4 5 6',
-            'mamao 7 8 9'])
+            'mamao 7 8 9']))
 
-        with patch('lib.embedding_vectorizer.open', mock):
+        with patch('util.embedding_vectorizer.open', mock):
             result = vectorizer.transform([text])
 
         mock.assert_called_with('glove.txt')
@@ -26,10 +26,10 @@ class AverageEmbeddingVectorizerTest (TestCase):
         vectorizer = AverageEmbeddingVectorizer(
                 GloveLoader('glove.2d.txt'))
         mock = mock_open()
-        mock.return_value.__iter__.return_value = iter([
-            'legal 1 2', 'ultra 4 5'])
+        mock.return_value.__iter__ = Mock(return_value = iter([
+            'legal 1 2', 'ultra 4 5']))
 
-        with patch('lib.embedding_vectorizer.open', mock):
+        with patch('util.embedding_vectorizer.open', mock):
             result = vectorizer.transform([text])
 
         mock.assert_called_with('glove.2d.txt')
@@ -40,10 +40,10 @@ class AverageEmbeddingVectorizerTest (TestCase):
         vectorizer = AverageEmbeddingVectorizer(
                 GloveLoader('glove.2d.txt'))
         mock = mock_open()
-        mock.return_value.__iter__.return_value = iter([
-            'legal 1 2', 'nothing 12 13', 'ultra 4 5'])
+        mock.return_value.__iter__ = Mock(return_value = iter([
+            'legal 1 2', 'nothing 12 13', 'ultra 4 5']))
 
-        with patch('lib.embedding_vectorizer.open', mock):
+        with patch('util.embedding_vectorizer.open', mock):
             result = vectorizer.transform([text])
 
         mock.assert_called_with('glove.2d.txt')
@@ -57,13 +57,13 @@ class AverageEmbeddingVectorizerTest (TestCase):
         vectorizer = AverageEmbeddingVectorizer(
                 GloveLoader('glove.2d.txt'))
         mock = mock_open()
-        mock.return_value.__iter__.return_value = iter([
+        mock.return_value.__iter__ = Mock(return_value = iter([
             'nova 3 9', 'alternativa 13 11', 'nada 3 10',
             'de 9 1', 'jogo 13 1', 'terceira 4 11',
             'outra 13 9', 'sentenca 1 1',
-            'legal 1 2', 'nothing 12 13', 'ultra 4 5'])
+            'legal 1 2', 'nothing 12 13', 'ultra 4 5']))
 
-        with patch('lib.embedding_vectorizer.open', mock):
+        with patch('util.embedding_vectorizer.open', mock):
             result = vectorizer.transform(corpus)
 
         mock.assert_called_with('glove.2d.txt')
@@ -80,13 +80,13 @@ class AverageEmbeddingVectorizerTest (TestCase):
         vectorizer = AverageEmbeddingVectorizer(
                 GloveLoader('glove.2d.txt'))
         mock = mock_open()
-        mock.return_value.__iter__.return_value = iter([
+        mock.return_value.__iter__ = Mock(return_value = iter([
             'nova 3 9', 'nada 3 10', 'de 9 1',
             'jogo 12 2', 'terceira 4 11',
             'outra 13 9', 'sentenca 1 1',
-            'legal 1 2', 'nothing 12 13', 'ultra 4 5'])
+            'legal 1 2', 'nothing 12 13', 'ultra 4 5']))
 
-        with patch('lib.embedding_vectorizer.open', mock):
+        with patch('util.embedding_vectorizer.open', mock):
             result = vectorizer.transform(corpus)
 
         mock.assert_called_with('glove.2d.txt')
@@ -103,13 +103,13 @@ class AverageEmbeddingVectorizerTest (TestCase):
         vectorizer = AverageEmbeddingVectorizer(
                 GloveLoader('glove.2d.txt'))
         mock = mock_open()
-        mock.return_value.__iter__.return_value = iter([
+        mock.return_value.__iter__ = Mock(return_value = iter([
             'nova 3 9', 'nada 3 10', 'de 9 1',
             'jogo 12 2', 'terceira 4 11',
             'outra 13 9', 'sentenca 1 1',
-            'legal 1 2', 'nothing 12 13', 'ultra 4 5'])
+            'legal 1 2', 'nothing 12 13', 'ultra 4 5']))
 
-        with patch('lib.embedding_vectorizer.open', mock):
+        with patch('util.embedding_vectorizer.open', mock):
             result = vectorizer.transform(corpus)
 
         mock.assert_called_with('glove.2d.txt')
@@ -125,10 +125,10 @@ class AverageEmbeddingVectorizerTest (TestCase):
         vectorizer = AverageEmbeddingVectorizer(
                 GloveLoader('glove.3d.txt'))
         mock = mock_open()
-        mock.return_value.__iter__.return_value = iter([
-            'outra 1 1 1', 'sentenca 1 1 1', 'ultra 4 5 6'])
+        mock.return_value.__iter__ = Mock(return_value = iter([
+            'outra 1 1 1', 'sentenca 1 1 1', 'ultra 4 5 6']))
 
-        with patch('lib.embedding_vectorizer.open', mock):
+        with patch('util.embedding_vectorizer.open', mock):
             result = vectorizer.transform(corpus)
 
         mock.assert_called_with('glove.3d.txt')
@@ -151,14 +151,14 @@ class AverageEmbeddingVectorizerTest (TestCase):
                 GloveLoader('glove.2d.txt'))
         vectorizer.fit = Mock(return_value=vectorizer)
         mock = mock_open()
-        mock.return_value.__iter__.return_value = iter([
+        mock.return_value.__iter__ = Mock(return_value = iter([
             'nova 3 9', 'nada 3 10', 'de 9 1',
             'jogo 12 2', 'terceira 4 11',
             'outra 13 9', 'sentenca 1 1',
-            'legal 1 2', 'nothing 12 13', 'ultra 4 5'])
+            'legal 1 2', 'nothing 12 13', 'ultra 4 5']))
         y_stub = []
 
-        with patch('lib.embedding_vectorizer.open', mock):
+        with patch('util.embedding_vectorizer.open', mock):
             result = vectorizer.fit_transform(corpus, y_stub)
 
         mock.assert_called_with('glove.2d.txt')

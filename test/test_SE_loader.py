@@ -1,7 +1,7 @@
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
-from lib.embedding_vectorizer import SELoader
+from util.embedding_vectorizer import SELoader
 
 class SELoaderTest (TestCase):
 

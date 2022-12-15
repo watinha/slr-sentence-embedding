@@ -7,7 +7,8 @@ class FilterCompositeTest (TestCase):
 
     def test_filter_implements_pipeline (self):
         X = []
-        fil = FilterComposite([StopwordsFilter()])
+        f = StopwordsFilter()
+        fil = FilterComposite([f])
         s = fil.fit(X)
         res = fil.transform(X)
 
@@ -20,8 +21,8 @@ class FilterCompositeTest (TestCase):
         self.assertEqual(fil, s)
         self.assertEqual([], res)
 
-        self.assertEqual({}, fil.get_params())
-        self.assertEqual({}, fil.get_params(False))
+        self.assertEqual({ 'filters': [f] }, fil.get_params())
+        self.assertEqual({ 'filters': [f] }, fil.get_params(False))
 
 
     def test_fit_transform(self):
