@@ -56,7 +56,7 @@ for train_index, test_index in kfold.split(X, y):
         ('scaler', StandardScaler(with_mean=False)),
         ('selector', SelectKBest(chi2)),
         ('classifier', classifier)
-    ]), classifier_params | selector_params, cv=2, scoring='roc_auc')
+    ]), { **classifier_params, **selector_params }, cv=2, scoring='roc_auc')
 
     pipeline.fit(X_train, y_train)
     y_pred = y_pred + (pipeline.predict(X_test)).tolist()
