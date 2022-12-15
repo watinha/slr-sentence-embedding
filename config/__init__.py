@@ -95,12 +95,11 @@ def get_classifier(classifier_name):
 
 
 def get_extractor(extractor_name, embeddings_filename=''):
-    match extractor_name:
-        case 'tfidf':
-            return TfidfVectorizer(ngram_range=(1,3)), [StopwordsFilter(), LemmatizerFilter()]
-        case 'embeddings_glove':
-            return AverageEmbeddingVectorizer(GloveLoader(embeddings_filename)), [StopwordsFilter()]
-        case 'embeddings_se':
-            return AverageEmbeddingVectorizer(SELoader(embeddings_filename)), [StopwordsFilter()]
+    if extractor_name == 'tfidf':
+      return TfidfVectorizer(ngram_range=(1,3)), [StopwordsFilter(), LemmatizerFilter()]
+    elif extractor_name == 'embeddings_glove':
+      return AverageEmbeddingVectorizer(GloveLoader(embeddings_filename)), [StopwordsFilter()]
+    elif extractor_name == 'embeddings_se':
+      return AverageEmbeddingVectorizer(SELoader(embeddings_filename)), [StopwordsFilter()]
 
 
