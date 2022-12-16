@@ -98,8 +98,10 @@ def get_extractor(extractor_name, embeddings_filename=''):
     if extractor_name == 'tfidf':
       return TfidfVectorizer(ngram_range=(1,3)), [StopwordsFilter(), LemmatizerFilter()]
     elif extractor_name == 'embeddings_glove':
-      return AverageEmbeddingVectorizer(GloveLoader(embeddings_filename)), [StopwordsFilter()]
+      print(' - building word index: %s' % (embeddings_filename))
+      return AverageEmbeddingVectorizer(GloveLoader(embeddings_filename)).build_word_index(), [StopwordsFilter()]
     elif extractor_name == 'embeddings_se':
-      return AverageEmbeddingVectorizer(SELoader(embeddings_filename)), [StopwordsFilter()]
+      print(' - building word index: %s' % (embeddings_filename))
+      return AverageEmbeddingVectorizer(SELoader(embeddings_filename)).build_word_index(), [StopwordsFilter()]
 
 

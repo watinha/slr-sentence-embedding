@@ -5,8 +5,8 @@ from nltk.tokenize import word_tokenize
 
 class AverageEmbeddingVectorizer():
 
-    def __init__(self, loader=None):
-        self._loader = loader
+    def __init__(self, word_index=None):
+        self._word_index = word_index
 
     def fit (self, X, y):
         return self
@@ -16,23 +16,22 @@ class AverageEmbeddingVectorizer():
 
     def transform(self, X):
         sentences = [word_tokenize(row) for row in X]
-        word_index = self._loader.build_word_index()
 
         result = []
         for sentence in sentences:
             vec = None
             n_words = 0
             for word in sentence:
-                if word in word_index:
+                if word in self._word_index:
                     if vec is None:
-                        vec = word_index[word]
+                        vec = self._word_index[word]
                     else:
-                        vec = vec + word_index[word]
+                        vec = vec + self._word_index[word]
                     n_words = n_words + 1
 
             if vec is None:
                 result.append(np.zeros(
-                    list(word_index.items())[0][1].shape))
+                    list(self._word_index.items())[0][1].shape))
             else:
                 result.append(vec / n_words)
 
