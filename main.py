@@ -46,6 +46,10 @@ missed = []
 X = np.array(X)
 y = np.array(y)
 
+extractor, filters = get_extractor(extractor_name, embeddings_filename=embedding_filename)
+preprocessor = FilterComposite(filters=filters)
+X = np.array(preprocessor.fit_transform(X))
+
 for train_index, test_index in kfold.split(X, y):
     X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
@@ -53,10 +57,7 @@ for train_index, test_index in kfold.split(X, y):
     classifier, classifier_params = get_classifier(classifier_name)
     selector_params = { 'selector__k': [ 25, 50, 100, 200, 'all'] }
 
-    extractor, filters = get_extractor(extractor_name, embeddings_filename=embedding_filename)
-
     pipeline = GridSearchCV(Pipeline([
-        ('preprocessor', FilterComposite(filters=filters)),
         ('extractor', extractor),
         ('scaler', StandardScaler(with_mean=False)),
         ('selector', SelectKBest(chi2)),
