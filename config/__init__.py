@@ -2,9 +2,13 @@ from sklearn import tree, svm, ensemble
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.feature_selection import SelectKBest, chi2
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
 
-from util.embedding_vectorizer import AverageEmbeddingVectorizer, GloveLoader, SELoader
+from gensim.models.keyedvectors import load_word2vec_format
+
+from util.embedding_vectorizer import AverageEmbeddingVectorizer
 from util.text_filter import StopwordsFilter, LemmatizerFilter
+
 
 slrs_files = {
     'games': {
@@ -103,14 +107,28 @@ def get_selector (selector_name):
       return TruncatedSVD(), { 'selector__n_components': [ 25, 50, 100, 200] }
 
 
+def get_filters(extractor_name):
+  if extractor_name == 'tfidf':
+    return [StopwordsFilter(), LemmatizerFilter()]
+  else:
+    return [StopwordsFilter()]
+
+
+cache = {}
 def get_extractor(extractor_name, embeddings_filename=''):
     if extractor_name == 'tfidf':
-      return TfidfVectorizer(ngram_range=(1,3)), [StopwordsFilter(), LemmatizerFilter()]
+        return TfidfVectorizer(ngram_range=(1,3)), StandardScaler(with_mean=False)
     elif extractor_name == 'embeddings_glove':
-      print(' - building word index: %s' % (embeddings_filename))
-      return AverageEmbeddingVectorizer(GloveLoader(embeddings_filename).build_word_index()), [StopwordsFilter()]
+      if extractor_name not in cache:
+        print('     - building word index: %s' % (embeddings_filename))
+        cache[extractor_name] = load_word2vec_format(embeddings_filename, no_header=True)
+
+      return AverageEmbeddingVectorizer(cache[extractor_name]), MinMaxScaler()
     elif extractor_name == 'embeddings_se':
-      print(' - building word index: %s' % (embeddings_filename))
-      return AverageEmbeddingVectorizer(SELoader(embeddings_filename).build_word_index()), [StopwordsFilter()]
+      if extractor_name not in cache:
+        print('     - building word index: %s' % (embeddings_filename))
+        cache[extractor_name] = load_word2vec_format(embeddings_filename, binary=True)
+
+      return AverageEmbeddingVectorizer(cache[extractor_name]), MinMaxScaler()
 
 

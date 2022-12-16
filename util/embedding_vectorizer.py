@@ -1,6 +1,5 @@
 import np
 
-from gensim.models import KeyedVectors
 from nltk.tokenize import word_tokenize
 
 class AverageEmbeddingVectorizer():
