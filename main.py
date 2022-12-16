@@ -3,7 +3,6 @@ import np, sys
 from sklearn import metrics
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.feature_selection import SelectKBest, chi2
 from sklearn.model_selection import GridSearchCV
 
 from config import get_slr_files, get_classifier, get_extractor
@@ -28,7 +27,11 @@ if (len(sys.argv) < 5):
     print('fifth argument missing: extrator (tfidf,embeddings_glove,embeddings_se)')
     sys.exit(1)
 
-_, theme, classifier_name, titles, extractor_name = sys.argv
+if (len(sys.argv) < 6):
+    print('sixth argument missing: selector (selectkbest, truncatedsvd)')
+    sys.exit(1)
+
+_, theme, classifier_name, titles, extractor_name, selector_name = sys.argv
 titles = True if titles == 'true' else False
 embedding_filename = './embeddings/glove.6B.200d.txt' if extractor_name == 'embeddings_glove' else './embeddings/SO_vectors_200.bin'
 
@@ -57,14 +60,20 @@ for train_index, test_index in kfold.split(X, y):
     X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
 
-    classifier, classifier_params = get_classifier(classifier_name)
-    selector_params = { 'selector__k': [ 25, 50, 100, 200, 'all'] }
+    print('   - Extracting features run...')
+    extractor_pipeline = Pipeline([
+      ('extractor', extractor),
+      ('scaler', StandardScaler(with_mean=False))
+    ])
+    X_train = extractor_pipeline.fit_transform(X_train)
+    X_test = extractor_pipeline.transform(X_test)
 
     print('   - Grid Search run...')
+    classifier, classifier_params = get_classifier(classifier_name)
+    selector, selector_params = get_selector(selector_name)
+
     pipeline = GridSearchCV(Pipeline([
-        ('extractor', extractor),
-        ('scaler', StandardScaler(with_mean=False)),
-        ('selector', SelectKBest(chi2)),
+        ('selector', selector),
         ('classifier', classifier)
     ]), { **classifier_params, **selector_params }, cv=2, scoring='roc_auc')
 
@@ -87,6 +96,8 @@ for train_index, test_index in kfold.split(X, y):
     missed.append(matrix[1, 0] / (matrix[1, 1] + matrix[1, 0]))
 
 
+print('')
+print('')
 print('====================================')
 print('=        General accuracy          =')
 print('====================================')

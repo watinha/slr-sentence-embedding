@@ -1,5 +1,7 @@
 from sklearn import tree, svm, ensemble
+from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.feature_selection import SelectKBest, chi2
 
 from util.embedding_vectorizer import AverageEmbeddingVectorizer, GloveLoader, SELoader
 from util.text_filter import StopwordsFilter, LemmatizerFilter
@@ -92,6 +94,13 @@ def get_classifier(classifier_name):
             'classifier__class_weight': ['balanced', None]
         }
     return classifier, params
+
+
+def get_selector (selector_name):
+    if selector_name == 'selectkbest':
+      return SelectKBest(chi2), { 'selector__k': [ 25, 50, 100, 200, 'all'] }
+    if selector_name == 'truncatedsvd':
+      return TruncatedSVD(), { 'selector__n_components': [ 25, 50, 100, 200] }
 
 
 def get_extractor(extractor_name, embeddings_filename=''):
