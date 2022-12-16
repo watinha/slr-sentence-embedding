@@ -38,7 +38,7 @@ class AverageEmbeddingVectorizer():
         return np.array(result)
 
     def get_params (self, deep=False):
-        return { 'loader': self._loader }
+        return { 'word_index': self._word_index }
 
     def set_params(self, **parameters):
       for parameter, value in parameters.items():

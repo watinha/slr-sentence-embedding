@@ -99,9 +99,9 @@ def get_extractor(extractor_name, embeddings_filename=''):
       return TfidfVectorizer(ngram_range=(1,3)), [StopwordsFilter(), LemmatizerFilter()]
     elif extractor_name == 'embeddings_glove':
       print(' - building word index: %s' % (embeddings_filename))
-      return AverageEmbeddingVectorizer(GloveLoader(embeddings_filename)).build_word_index(), [StopwordsFilter()]
+      return AverageEmbeddingVectorizer(GloveLoader(embeddings_filename).build_word_index()), [StopwordsFilter()]
     elif extractor_name == 'embeddings_se':
       print(' - building word index: %s' % (embeddings_filename))
-      return AverageEmbeddingVectorizer(SELoader(embeddings_filename)).build_word_index(), [StopwordsFilter()]
+      return AverageEmbeddingVectorizer(SELoader(embeddings_filename).build_word_index()), [StopwordsFilter()]
 
 
