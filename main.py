@@ -32,10 +32,9 @@ _, theme, classifier_name, titles, extractor_name = sys.argv
 titles = True if titles == 'true' else False
 embedding_filename = './embeddings/glove.6B.200d.txt' if extractor_name == 'embeddings_glove' else './embeddings/SO_vectors_200.bin'
 
+print('- Loading SLR data: %s' % (theme))
 slr_files = get_slr_files(theme)
 X, y, years = load(slr_files, titles_only=titles)
-
-kfold = YearsSplit(n_split=3, years=years)
 
 y_pred = []
 y_true = []
@@ -47,9 +46,13 @@ X = np.array(X)
 y = np.array(y)
 
 extractor, filters = get_extractor(extractor_name, embeddings_filename=embedding_filename)
+
+print('- Preprocessing data (removing stopwords and lemmatizer)')
 preprocessor = FilterComposite(filters=filters)
 X = np.array(preprocessor.fit_transform(X))
 
+print('- Running Cross-Validation with %s' % (classifier_name))
+kfold = YearsSplit(n_split=3, years=years)
 for train_index, test_index in kfold.split(X, y):
     X_train, X_test = X[train_index], X[test_index]
     y_train, y_test = y[train_index], y[test_index]
@@ -57,6 +60,7 @@ for train_index, test_index in kfold.split(X, y):
     classifier, classifier_params = get_classifier(classifier_name)
     selector_params = { 'selector__k': [ 25, 50, 100, 200, 'all'] }
 
+    print('   - Grid Search run...')
     pipeline = GridSearchCV(Pipeline([
         ('extractor', extractor),
         ('scaler', StandardScaler(with_mean=False)),
@@ -83,6 +87,9 @@ for train_index, test_index in kfold.split(X, y):
     missed.append(matrix[1, 0] / (matrix[1, 1] + matrix[1, 0]))
 
 
+print('')
+print('General accuracy')
+print('')
 print(metrics.classification_report(y_true, y_pred))
 print('')
 print('Configuring the activation threshold')
