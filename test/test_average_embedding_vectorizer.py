@@ -1,170 +1,64 @@
 from unittest import TestCase
-from unittest.mock import Mock, patch, mock_open
+from unittest.mock import MagicMock, Mock, call
 
-from util.embedding_vectorizer import AverageEmbeddingVectorizer, GloveLoader
+from util.embedding_vectorizer import AverageEmbeddingVectorizer
 
 class AverageEmbeddingVectorizerTest (TestCase):
 
-    def test_vectorize_sentence (self):
-        text = 'abobrinha pepino mamao'
-        mock = mock_open()
-        mock.return_value.__iter__ = Mock(return_value = iter([
-            'abobrinha 1 2 3',
-            'pepino 4 5 6',
-            'mamao 7 8 9']))
 
-        with patch('util.embedding_vectorizer.open', mock):
-            vectorizer = AverageEmbeddingVectorizer(
-                    GloveLoader('glove.txt').build_word_index())
-            result = vectorizer.transform([text])
-
-        mock.assert_called_with('glove.txt')
-        self.assertEqual([[4, 5, 6]], result.tolist())
-
-    def test_vectorize_different_sentence (self):
-        text = 'legal ultra'
-        mock = mock_open()
-        mock.return_value.__iter__ = Mock(return_value = iter([
-            'legal 1 2', 'ultra 4 5']))
-
-        with patch('util.embedding_vectorizer.open', mock):
-            vectorizer = AverageEmbeddingVectorizer(
-                    GloveLoader('glove.2d.txt').build_word_index())
-            result = vectorizer.transform([text])
-
-        mock.assert_called_with('glove.2d.txt')
-        self.assertEqual([[2.5, 3.5]], result.tolist())
-
-    def test_vectorize_should_ignore_unused_words (self):
-        text = 'legal ultra'
-        mock = mock_open()
-        mock.return_value.__iter__ = Mock(return_value = iter([
-            'legal 1 2', 'nothing 12 13', 'ultra 4 5']))
-
-        with patch('util.embedding_vectorizer.open', mock):
-            vectorizer = AverageEmbeddingVectorizer(
-                    GloveLoader('glove.2d.txt').build_word_index())
-            result = vectorizer.transform([text])
-
-        mock.assert_called_with('glove.2d.txt')
-        self.assertEqual([[2.5, 3.5]], result.tolist())
+  def setUp(self):
+    self.kv_mock = MagicMock()
+    self.vectorizer = AverageEmbeddingVectorizer(self.kv_mock)
 
 
-    def test_vectorize_should_run_on_multiple_sentences (self):
-        corpus = ['nova alternativa de jogo',
-                  'terceira alternativa legal',
-                  'outra sentenca']
-        mock = mock_open()
-        mock.return_value.__iter__ = Mock(return_value = iter([
-            'nova 3 9', 'alternativa 13 11', 'nada 3 10',
-            'de 9 1', 'jogo 13 1', 'terceira 4 11',
-            'outra 13 9', 'sentenca 1 1',
-            'legal 1 2', 'nothing 12 13', 'ultra 4 5']))
+  def test_transform_calls_get_mean_vector_once (self):
+    self.kv_mock.get_mean_vector.return_value = [1, 2, 3]
 
-        with patch('util.embedding_vectorizer.open', mock):
-            vectorizer = AverageEmbeddingVectorizer(
-                    GloveLoader('glove.2d.txt').build_word_index())
-            result = vectorizer.transform(corpus)
+    result = self.vectorizer.transform(['something is not right'])
 
-        mock.assert_called_with('glove.2d.txt')
-        self.assertAlmostEqual([
-            [9.5, 5.5],
-            [6, 8],
-            [7, 5]], result.tolist())
+    self.kv_mock.get_mean_vector.assert_called_with(['something', 'is', 'not', 'right'])
+    self.assertEqual([[1, 2, 3]], result)
 
 
-    def test_vectorize_should_ignore_words_not_in_embeddings (self):
-        corpus = ['nova alternativa de jogo',
-                  'alternativa terceira alternativa legal',
-                  'outra sentenca']
-        mock = mock_open()
-        mock.return_value.__iter__ = Mock(return_value = iter([
-            'nova 3 9', 'nada 3 10', 'de 9 1',
-            'jogo 12 2', 'terceira 4 11',
-            'outra 13 9', 'sentenca 1 1',
-            'legal 1 2', 'nothing 12 13', 'ultra 4 5']))
+  def test_transform_calls_get_mean_vector_for_each_row (self):
+    def side_effect (arg):
+      mapping = {
+        'one-more-thing': [4, 5, 6, 7, 8],
+        'here-is-an-apple': [9, 10, 11, 12, 13]
+      }
+      return mapping['-'.join(arg)]
 
-        with patch('util.embedding_vectorizer.open', mock):
-            vectorizer = AverageEmbeddingVectorizer(
-                    GloveLoader('glove.2d.txt').build_word_index())
-            result = vectorizer.transform(corpus)
+    self.kv_mock.get_mean_vector.side_effect = side_effect
 
-        mock.assert_called_with('glove.2d.txt')
-        self.assertEqual([
-            [8.0, 4.0],
-            [2.5, 6.5],
-            [7.0, 5.0]], result.tolist())
+    result = self.vectorizer.transform(['one more thing', 'here is an apple'])
 
-    def test_sentences_with_no_word_in_word_index (self):
-        corpus = ['nova alternativa de jogo',
-                  'alternativa terceira alternativa legal',
-                  'natal sem nenhuma palavra',
-                  'outra sentenca']
-        mock = mock_open()
-        mock.return_value.__iter__ = Mock(return_value = iter([
-            'nova 3 9', 'nada 3 10', 'de 9 1',
-            'jogo 12 2', 'terceira 4 11',
-            'outra 13 9', 'sentenca 1 1',
-            'legal 1 2', 'nothing 12 13', 'ultra 4 5']))
+    self.kv_mock.get_mean_vector.assert_has_calls([
+      call(['one', 'more', 'thing']), call(['here', 'is', 'an', 'apple'])])
+    self.assertEqual([[4, 5, 6, 7, 8], [9, 10, 11, 12, 13]], result)
 
-        with patch('util.embedding_vectorizer.open', mock):
-            vectorizer = AverageEmbeddingVectorizer(
-                    GloveLoader('glove.2d.txt').build_word_index())
-            result = vectorizer.transform(corpus)
 
-        mock.assert_called_with('glove.2d.txt')
-        self.assertEqual([
-            [8.0, 4.0],
-            [2.5, 6.5],
-            [0.0, 0.0],
-            [7.0, 5.0]], result.tolist())
+  def test_transform_does_not_call_get_mean_vector (self):
+    result = self.vectorizer.transform([])
 
-    def test_sentences_with_no_word_in_index_with_3d (self):
-        corpus = ['natal sem nenhuma palavra',
-                  'outra sentenca']
-        mock = mock_open()
-        mock.return_value.__iter__ = Mock(return_value = iter([
-            'outra 1 1 1', 'sentenca 1 1 1', 'ultra 4 5 6']))
+    self.kv_mock.get_mean_vector.assert_not_called()
+    self.assertEqual([], result)
 
-        with patch('util.embedding_vectorizer.open', mock):
-            vectorizer = AverageEmbeddingVectorizer(
-                    GloveLoader('glove.3d.txt').build_word_index())
-            result = vectorizer.transform(corpus)
 
-        mock.assert_called_with('glove.3d.txt')
-        self.assertEqual([
-            [0.0, 0.0, 0.0],
-            [1.0, 1.0, 1.0]], result.tolist())
+  def test_vectorize_implements_fit_interface (self):
+    X_stub, y_stub = [], []
+    result = self.vectorizer.fit(X_stub, y_stub)
+    self.assertEqual(self.vectorizer, result)
 
-    def test_vectorize_implements_fit_interface (self):
-        X_stub, y_stub = [], []
-        vectorizer = AverageEmbeddingVectorizer({})
-        result = vectorizer.fit(X_stub, y_stub)
-        self.assertEqual(vectorizer, result)
 
-    def test_vectorize_implements_fit_transform_interface (self):
-        corpus = ['nova alternativa de jogo',
-                  'alternativa terceira alternativa legal',
-                  'outra sentenca']
-        mock = mock_open()
-        mock.return_value.__iter__ = Mock(return_value = iter([
-            'nova 3 9', 'nada 3 10', 'de 9 1',
-            'jogo 12 2', 'terceira 4 11',
-            'outra 13 9', 'sentenca 1 1',
-            'legal 1 2', 'nothing 12 13', 'ultra 4 5']))
-        y_stub = []
+  def test_vectorize_implements_fit_transform_interface (self):
+    X_stub, y_stub = [], []
+    self.vectorizer.transform = Mock(return_value=[[1, 2], [3, 4]])
+    self.vectorizer.fit = Mock(return_value=self.vectorizer)
+    result = self.vectorizer.fit_transform(X_stub, y_stub)
 
-        with patch('util.embedding_vectorizer.open', mock):
-            vectorizer = AverageEmbeddingVectorizer(
-                    GloveLoader('glove.2d.txt').build_word_index())
-            vectorizer.fit = Mock(return_value=vectorizer)
-            result = vectorizer.fit_transform(corpus, y_stub)
+    self.vectorizer.transform.assert_called_with(X_stub)
+    self.vectorizer.fit.assert_called_with(X_stub, y_stub)
 
-        mock.assert_called_with('glove.2d.txt')
-        self.assertEqual([
-            [8.0, 4.0],
-            [2.5, 6.5],
-            [7.0, 5.0]], result.tolist())
-        vectorizer.fit.assert_called_once_with(corpus, y_stub)
+    self.assertEqual([[1, 2], [3, 4]], result)
 
 
