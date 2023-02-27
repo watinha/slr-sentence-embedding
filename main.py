@@ -77,7 +77,7 @@ for train_index, test_index in kfold.split(X, y):
     pipeline = GridSearchCV(Pipeline([
         ('selector', selector),
         ('classifier', classifier)
-    ]), { **classifier_params, **selector_params }, cv=3, scoring='accuracy')
+    ]), { **classifier_params, **selector_params }, cv=3, scoring='f1')
 
     pipeline.fit(X_train_ext, y_train)
     pred = (pipeline.predict(X_test_ext)).tolist()
@@ -88,7 +88,12 @@ for train_index, test_index in kfold.split(X, y):
     y_prob = pipeline.predict_proba(X_train_ext)[:, true_class_index]
     precision, recall, thresholds = metrics.precision_recall_curve(y_train, y_prob)
 
-    threshold = min(thresholds.tolist()[0], 0.5)
+    ind = -1
+    for i in recall.tolist():
+      if i == 1: ind += 1
+      else: break
+
+    threshold = min(thresholds[ind], 0.5)
 
     y_test_prob = (pipeline.predict_proba(X_test_ext)[:, true_class_index])
     y_test_prob = [ 0 if prob < threshold else 1 for prob in y_test_prob.tolist() ]
@@ -125,7 +130,7 @@ print('Excluded percentage: %f' % (sum(scores['excluded']) / len(scores['exclude
 print('  Missed percentage: %f' % (sum(scores['missed']) / len(scores['missed'])))
 
 results_filename = './results/analysis.xlsx'
-model_name = '%s-%s-%s' % (extractor_name, classifier_name, titles)
+model_name = '%s-%s-%s-%s' % (extractor_name, classifier_name, selector_name, titles)
 
 if os.path.exists(results_filename):
   prev = {}
