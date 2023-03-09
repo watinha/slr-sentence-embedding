@@ -20,7 +20,7 @@ with pd.ExcelWriter(filename) as writer:
 
     for metric in metrics:
       sheet = pd.read_excel(result_filename, sheet_name=metric, index_col=0)
-      themes_data = sheet[indexes]
+      themes_data = sheet.loc[indexes, :]
       df_themes['%s-%s-mean' % (theme, metric)] = themes_data.mean(axis=0)
 
-  df_themes.to_excel(writer, sheet_name='by themes')
+  df_themes.T.to_excel(writer, sheet_name='by themes')
