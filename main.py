@@ -34,7 +34,7 @@ _, theme, classifier_name, titles, extractor_name, selector_name = sys.argv
 titles = True if titles == 'true' else False
 embedding_filename = './embeddings/glove.6B.200d.txt' if extractor_name == 'embeddings_glove' else './embeddings/SO_vectors_200.bin'
 
-met = ['f1', 'precision', 'recall', 'roc_auc', 'excluded', 'missed']
+met = ['train_f1', 'train_roc_auc', 'f1', 'precision', 'recall', 'roc_auc', 'excluded', 'missed']
 scores = {}
 for m in met: scores[m] = []
 
@@ -80,6 +80,8 @@ for train_index, test_index in kfold.split(X, y):
     ]), { **classifier_params, **selector_params }, cv=3, scoring='f1')
 
     pipeline.fit(X_train_ext, y_train)
+    y_train_pred = (pipeline.predict(X_train_ext)).tolist()
+
     pred = (pipeline.predict(X_test_ext)).tolist()
     y_pred = y_pred + pred
     y_true = y_true + y_test.tolist()
@@ -103,6 +105,8 @@ for train_index, test_index in kfold.split(X, y):
     excluded = matrix[0, 0] / (matrix[0, 0] + matrix[1, 1] + matrix[0, 1] + matrix[1, 0])
     missed = matrix[1, 0] / (matrix[1, 1] + matrix[1, 0])
 
+    scores['train_f1'].append(metrics.f1_score(y_train, y_train_pred))
+    scores['train_roc_auc'].append(metrics.roc_auc_score(y_train, y_train_pred))
     scores['f1'].append(metrics.f1_score(y_test.tolist(), pred))
     scores['recall'].append(metrics.recall_score(y_test.tolist(), pred))
     scores['precision'].append(metrics.precision_score(y_test.tolist(), pred))

@@ -77,8 +77,8 @@ def get_classifier(classifier_name):
         classifier = tree.DecisionTreeClassifier(random_state=seed)
         params = {
             'classifier__criterion': ["gini", "entropy"],
-            'classifier__max_depth': [10, 50, 100, None],
-            'classifier__min_samples_split': [2, 10, 100],
+            'classifier__max_depth': [5, 10, 50, None],
+            'classifier__min_samples_split': [2, 5, 10],
             'classifier__class_weight': [None, 'balanced']
         }
     elif (classifier_name == 'rf'):
