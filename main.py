@@ -15,7 +15,7 @@ if (len(sys.argv) < 2):
     sys.exit(1)
 
 if (len(sys.argv) < 3):
-    print('third argument missing: classifier (svm|dt|rf|lsvm)')
+    print('third argument missing: classifier (svm|dt|rf|lsvm) or some transformers card-model (hugging-face)')
     sys.exit(1)
 
 if (len(sys.argv) < 4):
@@ -23,7 +23,7 @@ if (len(sys.argv) < 4):
     sys.exit(1)
 
 if (len(sys.argv) < 5):
-    print('fifth argument missing: extrator (tfidf,embeddings_glove,embeddings_se)')
+    print('fifth argument missing: extrator (tfidf,embeddings_glove,embeddings_se) or some transformers tokenizer (hugging-face)')
     sys.exit(1)
 
 if (len(sys.argv) < 6):
