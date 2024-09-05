@@ -1,10 +1,10 @@
-import np, sys, os, pandas as pd
+import numpy as np, sys, os, pandas as pd
 
 from sklearn import metrics
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import GridSearchCV
 
-from config import get_slr_files, get_classifier, get_extractor, get_selector, get_filters
+from config import get_slr_files, get_classifier_pipeline, get_extractor, get_filters
 from util.bib_loader import load
 from util.years_split import YearsSplit
 from util.text_filter import FilterComposite
@@ -15,7 +15,7 @@ if (len(sys.argv) < 2):
     sys.exit(1)
 
 if (len(sys.argv) < 3):
-    print('third argument missing: classifier (svm|dt|rf|lsvm)')
+    print('third argument missing: classifier (svm|dt|rf|lsvm) or some transformers card-model (hugging-face)')
     sys.exit(1)
 
 if (len(sys.argv) < 4):
@@ -23,7 +23,7 @@ if (len(sys.argv) < 4):
     sys.exit(1)
 
 if (len(sys.argv) < 5):
-    print('fifth argument missing: extrator (tfidf,embeddings_glove,embeddings_se)')
+    print('fifth argument missing: extrator (tfidf,embeddings_glove,embeddings_se) or some transformers tokenizer (hugging-face)')
     sys.exit(1)
 
 if (len(sys.argv) < 6):
@@ -62,23 +62,12 @@ for train_index, test_index in kfold.split(X, y):
     y_train, y_test = y[train_index], y[test_index]
 
     print('   - Extracting features run...')
-    extractor, scaler = get_extractor(extractor_name, embeddings_filename=embedding_filename)
-    extractor_pipeline = Pipeline([
-      ('extractor', extractor),
-      ('scaler', scaler)
-    ])
+    extractor_pipeline = get_extractor(extractor_name, embeddings_filename=embedding_filename)
     X_train_ext = extractor_pipeline.fit_transform(X_train)
     X_test_ext = extractor_pipeline.transform(X_test)
 
     print('   - Grid Search run...')
-    classifier, classifier_params = get_classifier(classifier_name)
-    selector, selector_params = get_selector(selector_name)
-
-    pipeline = GridSearchCV(Pipeline([
-        ('selector', selector),
-        ('classifier', classifier)
-    ]), { **classifier_params, **selector_params }, cv=3, scoring='f1')
-
+    pipeline = get_classifier_pipeline(classifier_name, selector_name)
     pipeline.fit(X_train_ext, y_train)
     y_train_pred = (pipeline.predict(X_train_ext)).tolist()
 
