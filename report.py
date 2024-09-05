@@ -2,7 +2,7 @@ import os, pandas as pd
 
 filename = './results/report.xlsx'
 result_filename = './results/analysis.xlsx'
-metrics = ['f1', 'precision', 'recall', 'roc_auc', 'excluded', 'missed']
+metrics = ['train_f1', 'train_roc_auc', 'f1', 'precision', 'recall', 'roc_auc', 'excluded', 'missed']
 
 with pd.ExcelWriter(filename) as writer:
   df = pd.DataFrame()
